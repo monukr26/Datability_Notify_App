@@ -23,6 +23,10 @@ class NotificationRepositoryImpl(
         }
     }
 
+    override fun getUnreadCount(): Flow<Int> {
+        return notificationDao.getUnreadCount()
+    }
+
     override suspend fun saveNotification(notification: NotificationItem): Boolean {
         val insertedRowId = notificationDao.insertNotification(notification.toEntity())
         return insertedRowId != -1L
@@ -30,6 +34,18 @@ class NotificationRepositoryImpl(
 
     override suspend fun markAsRead(id: String) {
         notificationDao.markAsRead(id)
+    }
+
+    override suspend fun markAllAsRead() {
+        notificationDao.markAllAsRead()
+    }
+
+    override suspend fun deleteNotification(id: String) {
+        notificationDao.deleteNotificationById(id)
+    }
+
+    override suspend fun clearAll() {
+        notificationDao.clearAllNotifications()
     }
 
     private fun NotificationEntity.toDomainModel(): NotificationItem {

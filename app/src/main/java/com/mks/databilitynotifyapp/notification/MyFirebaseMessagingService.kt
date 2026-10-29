@@ -20,23 +20,37 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "FCM message received from: ${remoteMessage.from}")
 
         val data = remoteMessage.data
-        if (data.isEmpty()) {
-            Log.w(TAG, "FCM message contains no data payload; skipping.")
+        val notification = remoteMessage.notification
+
+        // Ignore empty messages that contain neither data nor notification payload
+        if (data.isEmpty() && notification == null) {
+            Log.w(TAG, "FCM message contains neither data nor notification payload; skipping.")
             return
         }
 
-        val id = data["id"]?.trim()
-        if (id.isNullOrEmpty()) {
-            Log.w(TAG, "FCM payload rejected: required 'id' field is missing or empty.")
-            return
-        }
+        // 1. Resolve unique ID: prefer data["id"], fallback to remoteMessage.messageId, fallback to generated timestamp id
+        val id = data["id"]?.trim()?.ifEmpty { null }
+            ?: remoteMessage.messageId
+            ?: "msg_${System.currentTimeMillis()}"
 
-        // Parse optional / fallback fields safely
-        val title = data["title"]?.trim().takeUnless { it.isNullOrEmpty() } ?: "New Notification"
-        val description = data["description"]?.trim().orEmpty()
-        val bannerImg = data["bannerImg"]?.trim().takeUnless { it.isNullOrEmpty() }
+        // 2. Resolve Title: prefer data["title"], fallback to notification.title, fallback to default
+        val title = data["title"]?.trim()?.ifEmpty { null }
+            ?: notification?.title?.trim()?.ifEmpty { null }
+            ?: "New Notification"
+
+        // 3. Resolve Description: prefer data["description"], fallback to notification.body, fallback to empty string
+        val description = data["description"]?.trim()
+            ?: notification?.body?.trim()
+            ?: ""
+
+        // 4. Resolve Banner Image: prefer data["bannerImg"], fallback to notification.imageUrl
+        val bannerImg = data["bannerImg"]?.trim()?.ifEmpty { null }
+            ?: notification?.imageUrl?.toString()
+
+        // 5. Resolve Timestamp: prefer data["timestamp"], fallback to sentTime, fallback to current time
         val rawTimestamp = data["timestamp"]?.trim()
-        val timestamp = rawTimestamp?.toLongOrNull() ?: System.currentTimeMillis()
+        val timestamp = rawTimestamp?.toLongOrNull()
+            ?: if (remoteMessage.sentTime > 0) remoteMessage.sentTime else System.currentTimeMillis()
 
         val notificationItem = NotificationItem(
             id = id,
@@ -56,9 +70,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
             try {
                 val isNew = repository.saveNotification(notificationItem)
-                Log.d(TAG, "Notification id='$id' processed. Newly inserted: $isNew")
-                
-                // Display Android system notification using required channel
+                Log.d(TAG, "Notification id='$id' processed in Room. Newly inserted: $isNew")
+
+                // Post system notification using required channel 'assignment'
                 NotificationHelper.showNotification(applicationContext, notificationItem)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to persist notification id='$id': ${e.message}", e)
@@ -80,4 +94,3 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         private const val TAG = "MyFirebaseMsgService"
     }
 }
-

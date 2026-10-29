@@ -7,9 +7,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class InboxViewModel(
-    notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<InboxUiState> = notificationRepository.getAllNotifications()
@@ -25,5 +26,29 @@ class InboxViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = InboxUiState.Loading
         )
-}
 
+    val unreadCount: StateFlow<Int> = notificationRepository.getUnreadCount()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
+
+    fun markAllAsRead() {
+        viewModelScope.launch {
+            notificationRepository.markAllAsRead()
+        }
+    }
+
+    fun deleteNotification(id: String) {
+        viewModelScope.launch {
+            notificationRepository.deleteNotification(id)
+        }
+    }
+
+    fun clearAll() {
+        viewModelScope.launch {
+            notificationRepository.clearAll()
+        }
+    }
+}
