@@ -3,6 +3,7 @@ package com.mks.databilitynotifyapp
 import android.app.Application
 import com.mks.databilitynotifyapp.di.AppContainer
 import com.mks.databilitynotifyapp.di.DefaultAppContainer
+import com.mks.databilitynotifyapp.notification.NotificationHelper
 
 class DatabilityApp : Application() {
 
@@ -12,5 +13,7 @@ class DatabilityApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = DefaultAppContainer(this)
+        NotificationHelper.createNotificationChannel(this)
     }
 }
+
