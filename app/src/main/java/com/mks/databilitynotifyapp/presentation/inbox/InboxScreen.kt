@@ -241,7 +241,7 @@ fun InboxScreen(
     }
 }
 
-/ Notification Card
+// Notification Card
 
 @Composable
 fun NotificationItemCard(
