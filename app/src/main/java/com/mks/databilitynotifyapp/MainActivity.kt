@@ -89,9 +89,7 @@ class MainActivity : ComponentActivity() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result
-                Log.d("FCM_TOKEN", "==================================================")
                 Log.d("FCM_TOKEN", "CURRENT FCM TOKEN: $token")
-                Log.d("FCM_TOKEN", "==================================================")
             } else {
                 Log.e("FCM_TOKEN", "Failed to retrieve FCM token: ${task.exception?.message}", task.exception)
             }

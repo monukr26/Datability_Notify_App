@@ -241,13 +241,8 @@ fun InboxScreen(
     }
 }
 
-/**
- * Notification Card matching user sketch:
- * [Square Image]  Title
- *                 Description
- *                 Timestamp
- *                 [Delete Icon]
- */
+/ Notification Card
+
 @Composable
 fun NotificationItemCard(
     item: NotificationItem,
